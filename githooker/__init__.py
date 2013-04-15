@@ -173,15 +173,16 @@ def parse_hook_string(hook_str):
 def create_root_hook_scripts_and_config_files():
     for timing in timings():
         files = [
-            (hook_root_script_path(timing), ROOT_HOOK_TEMPLATE.format(timing=timing)),
-            (hook_list_file_path(timing), ''),
+            (hook_root_script_path(timing), ROOT_HOOK_TEMPLATE.format(timing=timing), 0o755),
+            (hook_list_file_path(timing), '', 0o655),
         ]
-        for filename, content in files:
+        for filename, content, flags in files:
             filepath = join(git_hooks_dir_path(), filename)
             if os.path.exists(filepath):
                 continue
             with io.open(filepath, 'w', encoding=Encoding) as fp:
                 fp.write(content)
+            os.chmod(filepath, flags)
 
 
 def all_hooks(timing):
