@@ -2,3 +2,5 @@
 /src
 /build
 __pycache__
+*.pyc
+*.pyo
