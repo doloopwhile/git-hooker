@@ -31,6 +31,7 @@ from abc import (
 from allfiles import allfiles
 Encoding = 'utf-8'
 
+
 def timings():
     return '''
         applypatch-msg
