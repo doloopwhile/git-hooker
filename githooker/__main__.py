@@ -10,6 +10,10 @@ def install_main(args):
     githooker.install_hook_subscripts(timing=args.timing)
 
 
+def test_main(args):
+    githooker.run_test(timing=args.timing, args=args.test_args)
+
+
 def main():
     parser = ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -20,6 +24,11 @@ def main():
     p = subparsers.add_parser('install')
     p.add_argument('timing', action='store')
     p.set_defaults(func=install_main)
+
+    p = subparsers.add_parser('test')
+    p.add_argument('timing', action='store')
+    p.add_argument('test_args', nargs='*')
+    p.set_defaults(func=test_main)
 
     args = parser.parse_args()
     args.func(args)

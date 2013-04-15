@@ -181,8 +181,6 @@ def create_root_hook_scripts_and_config_files():
                 fp.write(content)
 
 
-
-
 def all_hooks(timing):
     with io.open(hook_list_file_path(timing), encoding=Encoding) as fp:
         for line in fp:
@@ -203,3 +201,15 @@ def install_hook_subscripts(timing):
         print('installing {}'.format(hook.name()))
         hook.install(path)
 
+
+def all_hook_subscript_paths(timing):
+    return allfiles(hook_subscripts_dir_path(timing), single_level=True)
+
+
+def run_test(timing, args):
+    for subscript in all_hook_subscript_paths(timing):
+        cmd = [subscript] + args
+        try:
+            check_call(cmd)
+        except CalledProcessError as e:
+            sys.exit(e.returncode)
