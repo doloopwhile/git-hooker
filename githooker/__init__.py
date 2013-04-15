@@ -4,9 +4,11 @@ import os
 import re
 import shutil
 import io
+import shlex
 from subprocess import (
     check_output,
     check_call,
+    call,
     CalledProcessError,
 )
 from os.path import (
@@ -213,3 +215,16 @@ def run_test(timing, args):
             check_call(cmd)
         except CalledProcessError as e:
             sys.exit(e.returncode)
+
+
+def which_editor():
+    editor = os.getenv('EDITOR') or os.getenv('VISUAL')
+    if editor:
+        return shlex.split(editor)
+    return ['vi']
+
+
+def run_edit(timing):
+    cmd = which_editor() + [hook_list_file_path(timing)]
+    retcode = call(cmd)
+    print('Editor exited with code {}'.format(retcode))

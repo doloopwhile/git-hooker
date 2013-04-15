@@ -14,6 +14,10 @@ def test_main(args):
     githooker.run_test(timing=args.timing, args=args.test_args)
 
 
+def edit_main(args):
+    githooker.run_edit(timing=args.timing)
+
+
 def main():
     parser = ArgumentParser()
     subparsers = parser.add_subparsers()
@@ -29,6 +33,10 @@ def main():
     p.add_argument('timing', action='store')
     p.add_argument('test_args', nargs='*')
     p.set_defaults(func=test_main)
+
+    p = subparsers.add_parser('edit')
+    p.add_argument('timing', action='store')
+    p.set_defaults(func=edit_main)
 
     args = parser.parse_args()
     args.func(args)
