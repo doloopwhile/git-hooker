@@ -100,6 +100,7 @@ class AbstractWebHook(AbstractHook):
 
     def install(self, dest_path):
         urlretrieve(self._url(), dest_path)
+        os.chmod(dest_path, 0o755)
 
 
 class GistHook(AbstractWebHook):
