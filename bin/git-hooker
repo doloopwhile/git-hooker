@@ -1,0 +1,2 @@
+#!/bin/bash
+${VIRTUALENVWRAPPER_HOOK_DIR}/git-hooker/bin/python -m 'githooker' "$@"
