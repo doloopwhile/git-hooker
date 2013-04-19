@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from argparse import ArgumentParser
+from argparse import ArgumentParser, REMAINDER
 import githooker
 
 def init_main(args):
@@ -31,7 +31,7 @@ def main():
 
     p = subparsers.add_parser('test')
     p.add_argument('timing', action='store')
-    p.add_argument('test_args', nargs='*')
+    p.add_argument('test_args', nargs=REMAINDER)
     p.set_defaults(func=test_main)
 
     p = subparsers.add_parser('edit')
