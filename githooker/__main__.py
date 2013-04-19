@@ -26,16 +26,16 @@ def main():
     p.set_defaults(func=init_main)
 
     p = subparsers.add_parser('install')
-    p.add_argument('timing', action='store')
+    p.add_argument('timing', action='store', choices=githooker.timings())
     p.set_defaults(func=install_main)
 
     p = subparsers.add_parser('test')
-    p.add_argument('timing', action='store')
+    p.add_argument('timing', action='store', choices=githooker.timings())
     p.add_argument('test_args', nargs=REMAINDER)
     p.set_defaults(func=test_main)
 
     p = subparsers.add_parser('edit')
-    p.add_argument('timing', action='store')
+    p.add_argument('timing', action='store', choices=githooker.timings())
     p.set_defaults(func=edit_main)
 
     args = parser.parse_args()
