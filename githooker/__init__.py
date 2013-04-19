@@ -53,7 +53,7 @@ def timings():
 
 ROOT_HOOK_TEMPLATE = '''\
 #!/bin/sh
-git hooker test -t {timing} "$@"
+git hooker test {timing} "$@"
 '''
 
 def git_dir_path():
