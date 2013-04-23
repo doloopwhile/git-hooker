@@ -128,6 +128,9 @@ class GistHook(AbstractWebHook):
     def _url(self):
         return "https://raw.github.com/gist/{}".format(self._number)
 
+    def as_string(self):
+        return self.name()
+
 
 class UrlHook(AbstractWebHook):
     def __init__(self, url):
@@ -147,6 +150,9 @@ class UrlHook(AbstractWebHook):
     def _url(self):
         return self._url_str
 
+    def as_string(self):
+        return self._url_str
+
 
 class FileHook(AbstractHook):
     def __init__(self, path):
@@ -163,6 +169,9 @@ class FileHook(AbstractHook):
     def install(self, dest):
         os.makedirs(dirname(dest), 0o755, True)
         shutil.copy2(self._path, dest)
+
+    def as_string(self):
+        return self._path
 
 
 def parse_hook_string(hook_str):
@@ -199,16 +208,37 @@ def all_hooks(timing):
             yield parse_hook_string(line)
 
 
-def update_hook_subscripts(timing):
+def update_all_hook_subscripts(timing):
+    for number, hook in enumerate(all_hooks(timing)):
+        print('installing {}'.format(hook.name()))
+        update_hook_subscript(number, hook, timing)
+
+
+def update_hook_subscript(number, hook, timing):
     dir_path = hook_subscripts_dir_path(timing)
     if isdir(dir_path):
         shutil.rmtree(dir_path)
     os.makedirs(dir_path)
 
-    for number, hook in enumerate(all_hooks(timing)):
-        path = join(dir_path, '{}-{}'.format(number, hook.name()))
-        print('installing {}'.format(hook.name()))
-        hook.install(path)
+    path = join(dir_path, '{}-{}'.format(number, hook.name()))
+    hook.install(path)
+
+
+def install_hook_subscripts(hook_strings, timing):
+    hooks = list(all_hooks(timing))
+    new_hooks = []
+    for number, hook_string in enumerate(hook_strings, start=len(hooks)):
+        new_hook = parse_hook_string(hook_string)
+        new_hooks.append(new_hook)
+
+        update_hook_subscript(number, new_hook, timing)
+        with io.open(hook_list_file_path(timing), 'a+', encoding=Encoding) as fp:
+            line = ''
+            for line in fp:
+                pass
+            if line.endswith('\n'):
+                print(file=fp)
+            print(new_hook.as_string(), file=fp)
 
 
 def all_hook_subscript_paths(timing):
