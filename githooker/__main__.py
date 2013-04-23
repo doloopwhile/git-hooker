@@ -7,8 +7,8 @@ def init_main(args):
     githooker.create_root_hook_scripts_and_config_files()
 
 
-def install_main(args):
-    githooker.install_hook_subscripts(timing=args.timing)
+def update_main(args):
+    githooker.update_hook_subscripts(timing=args.timing)
 
 
 def test_main(args):
@@ -26,9 +26,9 @@ def main():
     p = subparsers.add_parser('init')
     p.set_defaults(func=init_main)
 
-    p = subparsers.add_parser('install')
+    p = subparsers.add_parser('update')
     p.add_argument('timing', action='store', choices=githooker.timings())
-    p.set_defaults(func=install_main)
+    p.set_defaults(func=update_main)
 
     p = subparsers.add_parser('test')
     p.add_argument('timing', action='store', choices=githooker.timings())

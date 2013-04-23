@@ -199,7 +199,7 @@ def all_hooks(timing):
             yield parse_hook_string(line)
 
 
-def install_hook_subscripts(timing):
+def update_hook_subscripts(timing):
     dir_path = hook_subscripts_dir_path(timing)
     if isdir(dir_path):
         shutil.rmtree(dir_path)
