@@ -2,6 +2,7 @@
 from argparse import ArgumentParser, REMAINDER
 import githooker
 
+
 def init_main(args):
     githooker.create_root_hook_scripts_and_config_files()
 

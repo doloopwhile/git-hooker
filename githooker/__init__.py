@@ -56,6 +56,7 @@ ROOT_HOOK_TEMPLATE = '''\
 git hooker test {timing} "$@"
 '''
 
+
 def git_dir_path():
     output = check_output(['git', 'rev-parse', '--git-dir'])
     path = output.decode(sys.getfilesystemencoding()).strip()
@@ -78,7 +79,6 @@ def hook_subscripts_dir_path(timing):
     return join(git_hooks_dir_path(), timing + '.installed')
 
 
-
 class HookParseError(ValueError):
     def __init__(self, hook_class, hook_str):
         super().__init__(hook_class, hook_str)
@@ -88,18 +88,22 @@ class HookParseError(ValueError):
 
 class AbstractHook(metaclass=ABCMeta):
     @abstractmethod
-    def parse(cls, arg_hook): pass
+    def parse(cls, arg_hook):
+        pass
 
     @abstractmethod
-    def name(self): pass
+    def name(self):
+        pass
 
     @abstractmethod
-    def install(self, dest_path): pass
+    def install(self, dest_path):
+        pass
 
 
 class AbstractWebHook(AbstractHook):
     @abstractmethod
-    def _url(self): pass
+    def _url(self):
+        pass
 
     def install(self, dest_path):
         urlretrieve(self._url(), dest_path)
@@ -172,8 +176,9 @@ def parse_hook_string(hook_str):
 
 def create_root_hook_scripts_and_config_files():
     for timing in timings():
+        root_hook = ROOT_HOOK_TEMPLATE.format(timing=timing)
         files = [
-            (hook_root_script_path(timing), ROOT_HOOK_TEMPLATE.format(timing=timing), 0o755),
+            (hook_root_script_path(timing), root_hook, 0o755),
             (hook_list_file_path(timing), '', 0o655),
         ]
         for filename, content, flags in files:
