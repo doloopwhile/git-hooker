@@ -267,3 +267,9 @@ def run_edit(timing):
     cmd = which_editor() + [hook_list_file_path(timing)]
     retcode = call(cmd)
     print('Editor exited with code {}'.format(retcode))
+
+
+def print_hook_list_file(timing):
+    with io.open(hook_list_file_path(timing), encoding=Encoding) as fp:
+        for line in fp:
+            print(line, end='')
