@@ -232,7 +232,9 @@ def install_hook_subscripts(hook_strings, timing):
         new_hooks.append(new_hook)
 
         update_hook_subscript(number, new_hook, timing)
-        with io.open(hook_list_file_path(timing), 'a+', encoding=Encoding) as fp:
+
+        path = hook_list_file_path(timing)
+        with io.open(path, 'a+', encoding=Encoding) as fp:
             line = ''
             for line in fp:
                 pass
