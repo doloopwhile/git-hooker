@@ -13,7 +13,7 @@ def update_main(args):
 
 def install_main(args):
     githooker.install_hook_subscripts(
-        args.hooks,
+        args.hook_string,
         timing=args.timing,
         link=args.link
     )
@@ -46,7 +46,7 @@ def main():
     p.add_argument('timing', action='store', choices=githooker.timings())
     p.add_argument('--link', action='store_true',
         help='Create symbolic link instead of copy to install a local script')
-    p.add_argument('hooks', action='store', nargs='+')
+    p.add_argument('hook_string', action='store', nargs='+')
     p.set_defaults(func=install_main)
 
     p = subparsers.add_parser('test')
