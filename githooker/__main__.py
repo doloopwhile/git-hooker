@@ -44,7 +44,8 @@ def main():
 
     p = subparsers.add_parser('install')
     p.add_argument('timing', action='store', choices=githooker.timings())
-    p.add_argument('--link', action='store_true')
+    p.add_argument('--link', action='store_true',
+        help='Create symbolic link instead of copy to install a local script')
     p.add_argument('hooks', action='store', nargs='+')
     p.set_defaults(func=install_main)
 
