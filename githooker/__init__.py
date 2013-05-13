@@ -88,6 +88,9 @@ class HookParseError(ValueError):
 
 
 class AbstractHook(metaclass=ABCMeta):
+    def __init__(self):
+        self._options = {}
+
     @abstractmethod
     def parse(cls, arg_hook):
         pass
@@ -99,6 +102,12 @@ class AbstractHook(metaclass=ABCMeta):
     @abstractmethod
     def install(self, dest_path):
         pass
+
+    def set_option(self, key, value):
+        self._options[key] = value
+
+    def get_option(self, key, default=None):
+        return self._options.get(key, default)
 
 
 class AbstractWebHook(AbstractHook):
@@ -170,7 +179,11 @@ class FileHook(AbstractHook):
         return basename(self._path)
 
     def install(self, dest):
-        shutil.copy2(self._path, dest)
+        if self.get_option('link'):
+            os.symlink(self._path, dest)
+        else:
+            shutil.copy2(self._path, dest)
+            os.chmod(dest, 0o755)
 
     def as_string(self):
         return self._path
@@ -227,16 +240,18 @@ def update_hook_subscript(number, hook, timing):
         os.makedirs(dir_path)
 
     path = join(dir_path, '{}-{}'.format(number, hook.name()))
+    if os.path.exists(path):
+        os.remove(path)
+
     print('installing {} as {}'.format(hook.name(), path))
     hook.install(path)
 
 
-def install_hook_subscripts(hook_strings, timing):
+def install_hook_subscripts(hook_strings, timing, link):
     hooks = list(all_hooks(timing))
-    new_hooks = []
     for number, hook_string in enumerate(hook_strings, start=len(hooks)):
         new_hook = parse_hook_string(hook_string)
-        new_hooks.append(new_hook)
+        new_hook.set_option('link', link)
 
         update_hook_subscript(number, new_hook, timing)
 

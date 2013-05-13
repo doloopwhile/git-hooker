@@ -12,7 +12,11 @@ def update_main(args):
 
 
 def install_main(args):
-    githooker.install_hook_subscripts(args.hooks, timing=args.timing)
+    githooker.install_hook_subscripts(
+        args.hooks,
+        timing=args.timing,
+        link=args.link
+    )
 
 
 def test_main(args):
@@ -40,6 +44,7 @@ def main():
 
     p = subparsers.add_parser('install')
     p.add_argument('timing', action='store', choices=githooker.timings())
+    p.add_argument('--link', action='store_true')
     p.add_argument('hooks', action='store', nargs='+')
     p.set_defaults(func=install_main)
 
