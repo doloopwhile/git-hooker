@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import io
+import types
 import shlex
 from subprocess import (
     check_output,
@@ -27,6 +28,7 @@ from abc import (
     ABCMeta,
     abstractmethod
 )
+from argparse import ArgumentParser
 
 import requests
 from allfiles import allfiles
@@ -88,6 +90,9 @@ class HookParseError(ValueError):
 
 
 class AbstractHook(metaclass=ABCMeta):
+    def __init__(self):
+        self._options = {}
+
     @abstractmethod
     def parse(cls, arg_hook):
         pass
@@ -99,6 +104,12 @@ class AbstractHook(metaclass=ABCMeta):
     @abstractmethod
     def install(self, dest_path):
         pass
+
+    def set_option(self, key, value):
+        self._options[key] = value
+
+    def get_option(self, key, default=None):
+        return self._options.get(key, default)
 
 
 class AbstractWebHook(AbstractHook):
@@ -132,7 +143,7 @@ class GistHook(AbstractWebHook):
         return "https://raw.github.com/gist/{}".format(self._number)
 
     def as_string(self):
-        return self.name()
+        return "gist:{}".format(self._number)
 
 
 class UrlHook(AbstractWebHook):
@@ -170,10 +181,14 @@ class FileHook(AbstractHook):
         return basename(self._path)
 
     def install(self, dest):
-        shutil.copy2(self._path, dest)
+        if self.get_option('link'):
+            os.symlink(self._path, dest)
+        else:
+            shutil.copy2(self._path, dest)
+            os.chmod(dest, 0o755)
 
     def as_string(self):
-        return self._path
+        return '{} --link'.format(self._path)
 
 
 def parse_hook_string(hook_str):
@@ -201,23 +216,75 @@ def create_root_hook_scripts_and_config_files():
             os.chmod(filepath, flags)
 
 
+class HooksFileParsingError(Exception):
+    def __init__(self, msg, line_string, line_number):
+        self._msg = msg
+        self._line_string = line_string
+        self._line_number = line_number
+        super().__init__(msg, line_string, line_number)
+
+    def __str__(self):
+        return '{}: At line {}: {}'.format(
+            self._msg,
+            self._line_number,
+            repr(self._line_string),
+        )
+
+
+def singletonmethod(obj):
+    """
+    >>> class A(object): pass
+    >>> a = A()
+    >>> @singletonmethod(a)
+    ... def hello(self):
+    ...     print "hello world!"
+    >>> a.hello()
+    hello world!
+    >>> type(a.hello)
+
+    """
+    def _singletonmethod(function):
+        method = types.MethodType(function, obj)
+        setattr(obj, function.__name__, method)
+        return function
+    return _singletonmethod
+
+
+def parse_hook_list_file_line(line, line_number):
+    argv = shlex.split(line)
+    parser = ArgumentParser()
+    parser.add_argument('hook_string', action='store')
+    parser.add_argument('--link', action='store_true')
+
+    @singletonmethod(parser)
+    def error(self, msg):
+        raise HooksFileParsingError(msg, line, line_number)
+
+    args = parser.parse_args(argv)
+    hook = parse_hook_string(args.hook_string)
+    hook.set_option('link', args.link)
+    return hook
+
+
 def all_hooks(timing):
     with io.open(hook_list_file_path(timing), encoding=Encoding) as fp:
-        for line in fp:
+        for line_number, line in enumerate(fp, start=1):
             line = line.strip()
             if not line:
                 continue
-            yield parse_hook_string(line)
+            yield parse_hook_list_file_line(line, line_number)
 
 
 def update_all_hook_subscripts(timing):
+    hooks = list(all_hooks(timing))
+
     dir_path = hook_subscripts_dir_path(timing)
     if not isdir(dir_path):
         os.makedirs(dir_path)
     else:
         shutil.rmtree(dir_path)
 
-    for number, hook in enumerate(all_hooks(timing)):
+    for number, hook in enumerate(hooks):
         update_hook_subscript(number, hook, timing)
 
 
@@ -227,16 +294,18 @@ def update_hook_subscript(number, hook, timing):
         os.makedirs(dir_path)
 
     path = join(dir_path, '{}-{}'.format(number, hook.name()))
+    if os.path.exists(path):
+        os.remove(path)
+
     print('installing {} as {}'.format(hook.name(), path))
     hook.install(path)
 
 
-def install_hook_subscripts(hook_strings, timing):
+def install_hook_subscripts(hook_strings, timing, link):
     hooks = list(all_hooks(timing))
-    new_hooks = []
     for number, hook_string in enumerate(hook_strings, start=len(hooks)):
         new_hook = parse_hook_string(hook_string)
-        new_hooks.append(new_hook)
+        new_hook.set_option('link', link)
 
         update_hook_subscript(number, new_hook, timing)
 
