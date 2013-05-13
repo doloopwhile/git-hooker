@@ -132,7 +132,7 @@ class GistHook(AbstractWebHook):
         return "https://raw.github.com/gist/{}".format(self._number)
 
     def as_string(self):
-        return self.name()
+        return "gist:{}".format(self._number)
 
 
 class UrlHook(AbstractWebHook):
