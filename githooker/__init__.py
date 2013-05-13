@@ -28,6 +28,7 @@ from abc import (
     abstractmethod
 )
 
+import requests
 from allfiles import allfiles
 Encoding = 'utf-8'
 
@@ -106,7 +107,9 @@ class AbstractWebHook(AbstractHook):
         pass
 
     def install(self, dest_path):
-        urlretrieve(self._url(), dest_path)
+        res = requests.get(self._url())
+        with io.open(dest_path, 'wb') as fp:
+            fp.write(res.content)
         os.chmod(dest_path, 0o755)
 
 
@@ -167,7 +170,6 @@ class FileHook(AbstractHook):
         return basename(self._path)
 
     def install(self, dest):
-        os.makedirs(dirname(dest), 0o755, True)
         shutil.copy2(self._path, dest)
 
     def as_string(self):
@@ -209,18 +211,23 @@ def all_hooks(timing):
 
 
 def update_all_hook_subscripts(timing):
+    dir_path = hook_subscripts_dir_path(timing)
+    if not isdir(dir_path):
+        os.makedirs(dir_path)
+    else:
+        shutil.rmtree(dir_path)
+
     for number, hook in enumerate(all_hooks(timing)):
-        print('installing {}'.format(hook.name()))
         update_hook_subscript(number, hook, timing)
 
 
 def update_hook_subscript(number, hook, timing):
     dir_path = hook_subscripts_dir_path(timing)
-    if isdir(dir_path):
-        shutil.rmtree(dir_path)
-    os.makedirs(dir_path)
+    if not isdir(dir_path):
+        os.makedirs(dir_path)
 
     path = join(dir_path, '{}-{}'.format(number, hook.name()))
+    print('installing {} as {}'.format(hook.name(), path))
     hook.install(path)
 
 
