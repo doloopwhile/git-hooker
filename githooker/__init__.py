@@ -251,7 +251,7 @@ def singletonmethod(obj):
 
 
 def parse_hook_list_file_line(line, line_number):
-    argv = shlex.split(line)
+    argv = shlex.split(line, True)
     parser = ArgumentParser()
     parser.add_argument('hook_string', action='store')
     parser.add_argument('--link', action='store_true')
@@ -270,7 +270,7 @@ def all_hooks(timing):
     with io.open(hook_list_file_path(timing), encoding=Encoding) as fp:
         for line_number, line in enumerate(fp, start=1):
             line = line.strip()
-            if not line:
+            if not line or line.startswith('#'):
                 continue
             yield parse_hook_list_file_line(line, line_number)
 
@@ -301,7 +301,7 @@ def update_hook_subscript(number, hook, timing):
     hook.install(path)
 
 
-def install_hook_subscripts(hook_strings, timing, link):
+def install_hook_subscripts(hook_strings, timing, link, comment):
     hooks = list(all_hooks(timing))
     for number, hook_string in enumerate(hook_strings, start=len(hooks)):
         new_hook = parse_hook_string(hook_string)
@@ -316,7 +316,7 @@ def install_hook_subscripts(hook_strings, timing, link):
                 pass
             if line.endswith('\n'):
                 print(file=fp)
-            print(new_hook.as_string(), file=fp)
+            print(new_hook.as_string() + ' # ' + comment, file=fp)
 
 
 def all_hook_subscript_paths(timing):
