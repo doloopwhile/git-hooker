@@ -8,7 +8,6 @@ import types
 import shlex
 from subprocess import (
     check_output,
-    check_call,
     call,
     CalledProcessError,
 )
@@ -324,12 +323,12 @@ def all_hook_subscript_paths(timing):
 
 
 def run_test(timing, args):
+    exit_codes = []
     for subscript in all_hook_subscript_paths(timing):
         cmd = [subscript] + args
-        try:
-            check_call(cmd)
-        except CalledProcessError as e:
-            sys.exit(e.returncode)
+        exit_codes.append(call(cmd))
+    if any([c != 0 for c in exit_codes]):
+        sys.exit(1)
 
 
 def which_editor():
