@@ -25,7 +25,10 @@ def test_main(args):
 
 
 def edit_main(args):
-    githooker.run_edit(timing=args.timing)
+    githooker.run_edit(
+        timing=args.timing,
+        update_after_edit=args.update,
+    )
 
 
 def show_main(args):
@@ -65,7 +68,9 @@ def main():
 
     p = subparsers.add_parser('edit')
     p.add_argument('timing', action='store', choices=githooker.timings())
-    p.set_defaults(func=edit_main)
+    p.add_argument('--update', action='store_true', dest='update')
+    p.add_argument('--no-update', action='store_false', dest='update')
+    p.set_defaults(func=edit_main, update=True),
 
     p = subparsers.add_parser('show')
     p.add_argument('timing', action='store', choices=githooker.timings())

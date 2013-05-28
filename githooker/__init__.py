@@ -19,6 +19,7 @@ from os.path import (
     dirname,
     isfile,
     isdir,
+    getmtime,
 )
 from urllib.parse import urlparse
 from urllib.request import urlretrieve
@@ -338,10 +339,30 @@ def which_editor():
     return ['vi']
 
 
-def run_edit(timing):
-    cmd = which_editor() + [hook_list_file_path(timing)]
+def run_edit(timing, update_after_edit):
+    path = hook_list_file_path(timing)
+    try:
+        prev_mtime = getmtime(path)
+    except OSError:
+        prev_mtime = 0
+
+    cmd = which_editor() + [path]
     retcode = call(cmd)
     print('Editor exited with code {}'.format(retcode))
+
+    if retcode != 0:
+        return
+
+    if not update_after_edit:
+        return
+
+    try:
+        curr_mtime = getmtime(path)
+    except OSError:
+        return
+
+    if prev_mtime < curr_mtime:
+        update_all_hook_subscripts(timing=timing)
 
 
 def print_hook_list_file(timing):
