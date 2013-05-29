@@ -29,9 +29,11 @@ from abc import (
     abstractmethod
 )
 from argparse import ArgumentParser
+import json
 
 import requests
 from allfiles import allfiles
+
 Encoding = 'utf-8'
 
 
@@ -111,6 +113,9 @@ class AbstractHook(metaclass=ABCMeta):
     def get_option(self, key, default=None):
         return self._options.get(key, default)
 
+    def additional_comment(self):
+        return ''
+
 
 class AbstractWebHook(AbstractHook):
     @abstractmethod
@@ -144,6 +149,11 @@ class GistHook(AbstractWebHook):
 
     def as_string(self):
         return "gist:{}".format(self._number)
+
+    def additional_comment(self):
+        api_url = "https://api.github.com/gists/{}".format(self._number)
+        res = requests.get(api_url)
+        return json.loads(res.content.decode('utf-8')).get('description', '')
 
 
 class UrlHook(AbstractWebHook):
@@ -301,22 +311,31 @@ def update_hook_subscript(number, hook, timing):
     hook.install(path)
 
 
-def install_hook_subscripts(hook_strings, timing, link, comment):
+def install_hook_subscripts(hook_strings, timing, link=False, comment=None):
     hooks = list(all_hooks(timing))
+    if comment is None:
+        comment = ''
+
     for number, hook_string in enumerate(hook_strings, start=len(hooks)):
         new_hook = parse_hook_string(hook_string)
         new_hook.set_option('link', link)
+
+        comment_for_this_hook = ''.join(
+            filter(None, [comment, new_hook.additional_comment()]))
 
         update_hook_subscript(number, new_hook, timing)
 
         path = hook_list_file_path(timing)
         with io.open(path, 'a+', encoding=Encoding) as fp:
-            line = ''
-            for line in fp:
+            last_line = '\n'
+            for last_line in fp:
                 pass
-            if line.endswith('\n'):
+            if not last_line.endswith('\n'):
                 print(file=fp)
-            print(new_hook.as_string() + ' # ' + comment, file=fp)
+            s = new_hook.as_string()
+            if comment_for_this_hook:
+                s += ' # ' + comment_for_this_hook
+            print(s, file=fp)
 
 
 def all_hook_subscript_paths(timing):
