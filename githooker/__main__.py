@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from argparse import ArgumentParser, REMAINDER
+from argparse import ArgumentParser, REMAINDER, FileType
 import githooker
 
 
@@ -17,6 +17,7 @@ def install_main(args):
         timing=args.timing,
         link=args.link,
         comment=args.comment,
+        list_file_fp=args.list_file_fp
     )
 
 
@@ -49,7 +50,7 @@ def main():
     p = subparsers.add_parser('install')
     p.add_argument('timing', action='store', choices=githooker.timings())
     p.add_argument(
-        '--link',
+        '-l', '--link',
         action='store_true',
         help='Create symbolic link instead of copy to install a local script'
     )
@@ -57,6 +58,11 @@ def main():
         '--comment',
         action='store',
         help='Comment for the hooks on hooklist file'
+    )
+    p.add_argument(
+        '-e', '--list', action='store',
+        type=FileType('r'), metavar='FILENAME', dest='list_file_fp',
+        help='Install all hooks listed in the file'
     )
     p.add_argument('hook_string', action='store', nargs='+')
     p.set_defaults(func=install_main)

@@ -261,6 +261,10 @@ def singletonmethod(obj):
 
 
 def parse_hook_list_file_line(line, line_number):
+    line = line.strip()
+    if not line or line.startswith('#'):
+        return None
+
     argv = shlex.split(line, True)
     parser = ArgumentParser()
     parser.add_argument('hook_string', action='store')
@@ -279,10 +283,9 @@ def parse_hook_list_file_line(line, line_number):
 def all_hooks(timing):
     with io.open(hook_list_file_path(timing), encoding=Encoding) as fp:
         for line_number, line in enumerate(fp, start=1):
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            yield parse_hook_list_file_line(line, line_number)
+            hook = parse_hook_list_file_line(line, line_number)
+            if hook is not None:
+                yield hook
 
 
 def update_all_hook_subscripts(timing):
@@ -311,31 +314,52 @@ def update_hook_subscript(number, hook, timing):
     hook.install(path)
 
 
-def install_hook_subscripts(hook_strings, timing, link=False, comment=None):
+def add_hook_to_list_file(timing, hook, comment=None):
+    line = hook.as_string()
+    comment_for_this_hook = ''.join(
+        filter(None, [comment, hook.additional_comment()]))
+
+    if comment_for_this_hook:
+        line += ' # ' + comment_for_this_hook
+
+    path = hook_list_file_path(timing)
+
+    with io.open(path, 'a+', encoding=Encoding) as fp:
+        # 最終行が改行で終わっていないときは改行を追加する
+        last_line = '\n'
+        for last_line in fp:
+            pass
+        if not last_line.endswith('\n'):
+            print(file=fp)
+        print(line, file=fp)
+
+
+def install_hook_subscripts(
+        hook_strings, timing,
+        link=False, comment=None, list_file_fp=None):
     hooks = list(all_hooks(timing))
     if comment is None:
         comment = ''
 
-    for number, hook_string in enumerate(hook_strings, start=len(hooks)):
-        new_hook = parse_hook_string(hook_string)
-        new_hook.set_option('link', link)
+    for hook_string in hook_strings:
+        hook = parse_hook_string(hook_string)
+        hook.set_option('link', link)
 
-        comment_for_this_hook = ''.join(
-            filter(None, [comment, new_hook.additional_comment()]))
+        update_hook_subscript(len(hooks), hook, timing)
+        add_hook_to_list_file(timing, hook, comment)
+        hooks.append(hook)
 
-        update_hook_subscript(number, new_hook, timing)
+    if list_file_fp is None:
+        return
 
-        path = hook_list_file_path(timing)
-        with io.open(path, 'a+', encoding=Encoding) as fp:
-            last_line = '\n'
-            for last_line in fp:
-                pass
-            if not last_line.endswith('\n'):
-                print(file=fp)
-            s = new_hook.as_string()
-            if comment_for_this_hook:
-                s += ' # ' + comment_for_this_hook
-            print(s, file=fp)
+    for line_number, line in enumerate(list_file_fp, start=1):
+        hook = parse_hook_list_file_line(line, line_number)
+        if hook is None:
+            continue
+
+        update_hook_subscript(len(hooks), hook, timing)
+        add_hook_to_list_file(timing, hook, comment)
+        hooks.append(hooks)
 
 
 def all_hook_subscript_paths(timing):
