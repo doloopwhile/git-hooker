@@ -367,9 +367,9 @@ def run_edit(timing, update_after_edit):
 
     cmd = which_editor() + [path]
     retcode = call(cmd)
-    print('Editor exited with code {}'.format(retcode))
 
     if retcode != 0:
+        print('Editor exited with code {}'.format(retcode))
         return
 
     if not update_after_edit:
