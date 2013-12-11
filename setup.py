@@ -20,4 +20,8 @@ setup(
     license='MIT',
 
     py_modules=['githooker'],
+    install_requires='''
+        allfiles
+        requests
+    '''.split()
 )
