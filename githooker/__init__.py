@@ -79,6 +79,13 @@ def hook_subscripts_dir_path(timing):
     return join(git_hooks_dir_path(), timing + '.installed')
 
 
+def git_rebase_in_progress():
+    return (
+        isdir(join(git_dir_path(), 'rebase-merge')) or
+        isdir(join(git_dir_path(), 'rebase-apply'))
+    )
+
+
 class HookParseError(ValueError):
     def __init__(self, hook_class, hook_str):
         super().__init__(hook_class, hook_str)
@@ -337,7 +344,22 @@ def all_hook_subscript_paths(timing):
     return allfiles(hook_subscripts_dir_path(timing), single_level=True)
 
 
-def run_test(timing, args):
+def get_git_config_bool(name, default=False):
+    key = 'hooker.' + name
+    output = check_output(['git', 'config', '--bool', '--get', key])
+
+    values = {
+        b'true': True,
+        b'false': False,
+    }
+    return values.get(output.strip(), default)
+
+
+def run_test(timing, args, skip_in_rebase):
+    if skip_in_rebase and git_rebase_in_progress():
+        print("rebase is in progress, skip {} hooks".format(timing))
+        sys.exit(0)
+
     exit_codes = []
     for subscript in all_hook_subscript_paths(timing):
         cmd = [subscript] + args

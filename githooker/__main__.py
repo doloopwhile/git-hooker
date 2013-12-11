@@ -21,7 +21,11 @@ def install_main(args):
 
 
 def test_main(args):
-    githooker.run_test(timing=args.timing, args=args.test_args)
+    githooker.run_test(
+        timing=args.timing,
+        args=args.test_args,
+        skip_in_rebase=githooker.get_git_config_bool('skipinrebase'),
+    )
 
 
 def edit_main(args):
