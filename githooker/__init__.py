@@ -9,20 +9,15 @@ import shlex
 from subprocess import (
     check_output,
     call,
-    CalledProcessError,
 )
 from os.path import (
     join,
     abspath,
-    relpath,
     basename,
-    dirname,
-    isfile,
     isdir,
     getmtime,
 )
 from urllib.parse import urlparse
-from urllib.request import urlretrieve
 import posixpath
 from abc import (
     ABCMeta,
@@ -247,11 +242,11 @@ def singletonmethod(obj):
     >>> a = A()
     >>> @singletonmethod(a)
     ... def hello(self):
-    ...     print "hello world!"
+    ...     print("hello world!")
     >>> a.hello()
     hello world!
     >>> type(a.hello)
-
+    <class 'method'>
     """
     def _singletonmethod(function):
         method = types.MethodType(function, obj)
